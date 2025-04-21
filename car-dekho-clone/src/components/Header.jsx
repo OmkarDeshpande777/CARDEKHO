@@ -4,7 +4,7 @@ const Header = ({ onShowFavorites, favoritesCount, compareCount, onShowCompare }
   return (
     <header className="header">
       <div className="container">
-        <a href="/" className="logo">CarDekho Clone</a>
+        <a href="/" className="logo">Gaadi Dekho</a>
         <div className="nav-links">
           <a href="/">Home</a>
           <a href="#cars">Cars</a>
