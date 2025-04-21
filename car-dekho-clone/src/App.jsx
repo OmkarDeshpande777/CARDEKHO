@@ -1,64 +1,47 @@
+  
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CarCard from './components/CarCard';
 import CategoryFilter from './components/CategoryFilter';
 import PriceFilter from './components/PriceFilter';
-import CarDetailsModal from './components/CarDetailsModal';
-import ComparisonModal from './components/ComparisonModal';
-import SavedSearchesModal from './components/SavedSearchesModal';
-import FavoritesPanel from './components/FavoritesPanel';
+import FavoritesPage from './components/FavoritesPage';
+import CarDetailsPage from './components/CarDetailsPage';
+import ComparePage from './components/ComparePage';
 import carsData from './data/carsData';
 
-function App() {
-  // Find all unique car types
+function AppContent() {
+  const navigate = useNavigate();
   const allCarTypes = [...new Set(carsData.map(car => car.type))];
   
   // State for filters
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [priceRange, setPriceRange] = useState(3500000);  // Set a default max price
+  const [priceRange, setPriceRange] = useState(3500000);
   const [filteredCars, setFilteredCars] = useState(carsData);
-  
-  // State for modals
-  const [selectedCar, setSelectedCar] = useState(null);
-  const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [showSavedSearchesModal, setShowSavedSearchesModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // State for favorites and comparison
   const [favorites, setFavorites] = useState([]);
   const [carsToCompare, setCarsToCompare] = useState([]);
-  const [showFavorites, setShowFavorites] = useState(false);
-  
-  // State for saved searches
-  const [savedSearches, setSavedSearches] = useState([]);
-  const [searchName, setSearchName] = useState('');
   
   // Find the highest price car for the range slider
-  const maxPrice = Math.max(...carsData.map(car => car.price));
+  const maxPrice = Math.max(...carsData.map(car => car.price || 0));
 
   // Load saved data from localStorage on initial render
   useEffect(() => {
     const savedFavorites = localStorage.getItem('favorites');
-    const savedSearches = localStorage.getItem('savedSearches');
-    
+    console.log('Loading favorites from localStorage:', savedFavorites); // Debug
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
-    }
-    
-    if (savedSearches) {
-      setSavedSearches(JSON.parse(savedSearches));
     }
   }, []);
 
   // Save favorites to localStorage whenever it changes
   useEffect(() => {
+    console.log('Saving favorites to localStorage:', favorites); // Debug
     localStorage.setItem('favorites', JSON.stringify(favorites));
   }, [favorites]);
-
-  // Save saved searches to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-  }, [savedSearches]);
 
   // Handle category filter changes
   const handleCategoryChange = (category) => {
@@ -69,28 +52,36 @@ function App() {
     }
   };
 
-  // Filter cars based on selected filters
+  // Filter cars based on selected filters and search query
   useEffect(() => {
     let result = carsData;
     
-    // Filter by selected categories if any are selected
+    if (searchQuery.trim()) {
+      result = result.filter(car => {
+        const model = (car.model || '').toString().toLowerCase();
+        const brand = (car.brand || '').toString().toLowerCase();
+        const query = searchQuery.toLowerCase();
+        return model.includes(query) || brand.includes(query);
+      });
+    }
+    
     if (selectedCategories.length > 0) {
       result = result.filter(car => selectedCategories.includes(car.type));
     }
     
-    // Filter by price range
-    result = result.filter(car => car.price <= priceRange);
+    result = result.filter(car => (car.price || 0) <= priceRange);
     
     setFilteredCars(result);
-  }, [selectedCategories, priceRange]);
+  }, [selectedCategories, priceRange, searchQuery]);
 
   // Handler for showing car details
   const handleShowDetails = (car) => {
-    setSelectedCar(car);
+    navigate(`/car/${car.id}`);
   };
 
   // Handler for adding/removing favorites
   const handleAddToFavorite = (car) => {
+    console.log('Toggling favorite for car:', car.model); // Debug
     if (favorites.some(fav => fav.id === car.id)) {
       setFavorites(favorites.filter(fav => fav.id !== car.id));
     } else {
@@ -112,90 +103,35 @@ function App() {
     }
   };
 
-  // Save current search
-  const handleSaveSearch = () => {
-    if (!searchName.trim()) {
-      alert('Please enter a name for your search');
-      return;
-    }
-    
-    const newSearch = {
-      name: searchName,
-      selectedCategories,
-      priceRange
-    };
-    
-    setSavedSearches([...savedSearches, newSearch]);
-    setSearchName('');
-    alert('Search saved successfully!');
-  };
-
-  // Apply saved search
-  const handleApplySearch = (search) => {
-    setSelectedCategories(search.selectedCategories);
-    setPriceRange(search.priceRange);
-    setShowSavedSearchesModal(false);
-  };
-
-  // Delete saved search
-  const handleDeleteSearch = (index) => {
-    const updatedSearches = [...savedSearches];
-    updatedSearches.splice(index, 1);
-    setSavedSearches(updatedSearches);
-  };
-
   return (
     <div className="App">
       <Header 
-        onShowFavorites={() => setShowFavorites(!showFavorites)}
+        onShowFavorites={() => navigate('/favorites', { state: { favorites } })}
         favoritesCount={favorites.length}
         compareCount={carsToCompare.length}
-        onShowCompare={() => carsToCompare.length > 0 && setShowComparisonModal(true)}
+        onShowCompare={() => carsToCompare.length > 0 && navigate('/compare', { state: { carsToCompare } })}
       />
-      
-      {showFavorites && (
-        <FavoritesPanel 
-          favorites={favorites} 
-          onClose={() => setShowFavorites(false)}
-          onRemoveFavorite={handleAddToFavorite}
-          onShowDetails={handleShowDetails}
-        />
-      )}
       
       <main className="main">
         <div className="container">
           <section className="hero">
             <h1>Find Your Perfect Car</h1>
             <p>Search from a wide range of Indian cars, compare prices, and make an informed decision.</p>
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search by car model or brand..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
           </section>
           
           <section id="cars">
             <h2 className="section-title">Browse Cars</h2>
             
             <div className="filters">
-              <div className="filter-actions">
-                <button 
-                  className="action-btn"
-                  onClick={() => setShowSavedSearchesModal(true)}
-                >
-                  Saved Searches
-                </button>
-                <div className="save-search">
-                  <input
-                    type="text"
-                    placeholder="Search name"
-                    value={searchName}
-                    onChange={(e) => setSearchName(e.target.value)}
-                  />
-                  <button 
-                    className="save-btn"
-                    onClick={handleSaveSearch}
-                  >
-                    Save Current Search
-                  </button>
-                </div>
-              </div>
-
               <CategoryFilter 
                 categories={allCarTypes}
                 selectedCategories={selectedCategories}
@@ -214,7 +150,7 @@ function App() {
                 <p>{carsToCompare.length} car(s) selected</p>
                 <button
                   className="compare-btn"
-                  onClick={() => setShowComparisonModal(true)}
+                  onClick={() => navigate('/compare', { state: { carsToCompare } })}
                 >
                   Compare Cars
                 </button>
@@ -241,46 +177,28 @@ function App() {
                   />
                 ))
               ) : (
-                <p>No cars match your selected filters.</p>
+                <p>No cars match your selected filters or search query.</p>
               )}
             </div>
           </section>
         </div>
       </main>
       
-      {/* Car Details Modal */}
-      {selectedCar && (
-        <CarDetailsModal 
-          car={selectedCar} 
-          onClose={() => setSelectedCar(null)} 
-          onAddToCompare={handleAddToCompare}
-          isInCompare={carsToCompare.some(c => c.id === selectedCar.id)}
-          onAddToFavorite={handleAddToFavorite}
-          isFavorite={favorites.some(fav => fav.id === selectedCar.id)}
-        />
-      )}
-      
-      {/* Comparison Modal */}
-      {showComparisonModal && (
-        <ComparisonModal 
-          cars={carsToCompare} 
-          onClose={() => setShowComparisonModal(false)} 
-          onRemoveCar={(car) => handleAddToCompare(car)}
-        />
-      )}
-      
-      {/* Saved Searches Modal */}
-      {showSavedSearchesModal && (
-        <SavedSearchesModal 
-          savedSearches={savedSearches}
-          onApplySearch={handleApplySearch}
-          onDeleteSearch={handleDeleteSearch}
-          onClose={() => setShowSavedSearchesModal(false)}
-        />
-      )}
-      
       <Footer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<AppContent />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/car/:id" element={<CarDetailsPage />} />
+        <Route path="/compare" element={<ComparePage />} />
+      </Routes>
+    </Router>
   );
 }
 
