@@ -1,4 +1,4 @@
-  
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
@@ -57,11 +57,11 @@ function AppContent() {
     let result = carsData;
     
     if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
       result = result.filter(car => {
-        const model = (car.model || '').toString().toLowerCase();
         const brand = (car.brand || '').toString().toLowerCase();
-        const query = searchQuery.toLowerCase();
-        return model.includes(query) || brand.includes(query);
+        const model = (car.model || '').toString().toLowerCase();
+        return brand.includes(query) || model.includes(query);
       });
     }
     
