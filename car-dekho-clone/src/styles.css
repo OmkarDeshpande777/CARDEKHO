@@ -601,3 +601,45 @@ body {
     font-size: 24px;
   }
 }
+
+.test-drive-booking {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.test-drive-booking h2 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.test-drive-booking form div {
+  margin-bottom: 10px;
+}
+
+.test-drive-booking label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.test-drive-booking input,
+.test-drive-booking select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.test-drive-booking button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.test-drive-booking button:hover {
+  background-color: #0056b3;
+}

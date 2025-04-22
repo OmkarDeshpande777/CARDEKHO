@@ -9,6 +9,7 @@ import PriceFilter from './components/PriceFilter';
 import FavoritesPage from './components/FavoritesPage';
 import CarDetailsPage from './components/CarDetailsPage';
 import ComparePage from './components/ComparePage';
+import TestDriveBooking from './components/TestDriveBooking';
 import carsData from './data/carsData';
 
 function AppContent() {
@@ -130,7 +131,7 @@ function AppContent() {
           
           <section id="cars">
             <h2 className="section-title">Browse Cars</h2>
-            
+            <TestDriveBooking />
             <div className="filters">
               <CategoryFilter 
                 categories={allCarTypes}
